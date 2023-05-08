@@ -2,52 +2,65 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 
+from matplotlib.collections import LineCollection
+
 
 def main():
     st.title("Detection Range")
+    alt, burial_depth, detection_range = get_input()
 
-    DR = st.slider("DR", 0.0, 20.0, 7.0, step=0.1)
-    BD = st.slider("BD", 0.0, 10.0, 3.0, step=0.1)
-    MAX_ALT = 30.0
-    ALT = st.slider("ALT", 0.0, MAX_ALT, 4.5, step=0.1)
+    x_ = detection_range ** 2 - (alt + burial_depth) ** 2
 
-    DC = np.sqrt(abs(DR ** 2 - (ALT + BD) ** 2))
-
-    deg = np.arange(0, 360.01, 0.01)
-    rad = np.deg2rad(deg)
+    x_range = np.sqrt(x_)
 
     # Geowing Config
     M1 = -2.5
     M3 = 0
     M5 = 2.5
 
-    M1_x = DR * np.sin(rad) + M1
-    M3_x = DR * np.sin(rad) + M3
-    M5_x = DR * np.sin(rad) + M5
-    My = DR * np.cos(rad) + ALT
+    center_1 = (M1, alt)
+    center_2 = (M3, alt)
+    center_3 = (M5, alt)
+    circle_M1_x = plt.Circle(center_1, detection_range, color='grey', fill=False)
+    circle_M3_x = plt.Circle(center_2, detection_range, color='grey', fill=False)
+    circle_M5_x = plt.Circle(center_3, detection_range, color='grey', fill=False)
 
-    DC3 = [-DC]
 
-    # seabed
-    Sea_y = np.zeros(201)
-    # burial depth
-    BD_y = -BD + np.zeros(201)
-    Aux_y = np.vstack((BD_y, Sea_y))
-    Aux_x = np.arange(-10, 10.1, 0.1)
-
-    Mx = np.vstack((M1_x, M3_x, M5_x)).T
-
-    # plot
     fig, ax = plt.subplots()
-    ax.axis([-10, 10, -5, 15])
-    ax.plot(Mx, My)
-    ax.plot(M1, ALT)
-    # , "1", M3, ALT, "2", M5, ALT, "3", Aux_x, Sea_y, "k", Aux_x, BD_y, "m")
-    ax.set_xlabel("Easting [m]")
-    ax.set_ylabel("m")
+    ax.axis([-10, 10, -8, 7])
+    ax.add_patch(circle_M1_x)
+    ax.add_patch(circle_M3_x)
+    ax.add_patch(circle_M5_x)
+    ax.axhline(y=0, color='b', linestyle='-')
+    ax.axhline(y=-burial_depth, color='r', linestyle='-', )
+
+    # ax.plot([center_1, (M1 + x_range, -burial_depth)])
+    if x_ > 0:
+        left = (M1 - x_range, -burial_depth)
+        right = (M5 + x_range, -burial_depth)
+        lc = LineCollection([[center_1, left],
+                             [center_3, right],
+                             [left, right],
+                             ],
+                            linewidth=3.0,
+                            )
+        ax.add_collection(lc)
+    ax.scatter(*np.array([center_1, center_2, center_3]).T)
+
+    ax.set_xlabel("Cross-track [m]")
+    ax.set_ylabel("Altitude [m]")
     ax.set_title("Detection Range")
     ax.set_aspect('equal')
     st.pyplot(fig)
+
+
+
+def get_input():
+    DR = st.slider("Detection Range [m]", 0.0, 20.0, 7.0, step=0.1)
+    BD = st.slider("Burial Depth [m]", 0.0, 10.0, 3.0, step=0.1)
+    ALT = st.slider("Altitude [m]", 0.0, 30.0, 4.5, step=0.1)
+    return ALT, BD, DR
+
 
 if __name__ == '__main__':
     main()
