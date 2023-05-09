@@ -1,18 +1,16 @@
-import itertools
-
-import streamlit as st
-import numpy as np
 import matplotlib.pyplot as plt
-
+import numpy as np
+import streamlit as st
 from matplotlib.collections import LineCollection, CircleCollection, PatchCollection
-
+from matplotlib.lines import Line2D
+from matplotlib.patches import Circle
 
 def mirrored_interval(step: float, n: int):
     array = np.arange(0, n * step, step)
     return array - (array[-1] / 2)
 
 def main():
-    st.title("Detection range calculator")
+    st.title("MAG Coverage")
     alt, burial_depth, detection_range, n_sensors, spacing = get_input()
 
     x_ = detection_range ** 2 - (alt + burial_depth) ** 2
@@ -23,29 +21,19 @@ def main():
     sensor_x = mirrored_interval(spacing, n_sensors)
     centers = [np.array([x, alt]) for x in sensor_x]
     # cl = CircleCollection(itertools.repeat(detection_range, n_sensors), offsets=centers)
-    circles = [plt.Circle(center, detection_range, color='grey', fill=False, linestyle='--') for center in centers]
+    circles = [Circle(center, detection_range, color='grey', fill=False, linestyle='--') for center in centers]
 
-    # circle_M1_x = plt.Circle(center_1, detection_range, color='grey', fill=False)
-    # circle_M3_x = plt.Circle(center_2, detection_range, color='grey', fill=False)
-    # circle_M5_x = plt.Circle(center_3, detection_range, color='grey', fill=False)
-    # ax.annotate(txt, (z[i], y[i]))
 
     fig, ax = plt.subplots()
-    ax.axis([-12, 12, -8, 12])
-    # ax.add_patch(circle_M1_x)
-    # ax.add_patch(circle_M3_x)
-    # ax.add_patch(circle_M5_x)
-    for c in circles:
-        ax.add_patch(c)
-    # cl = PatchCollection(circles)
-    # ax.add_collection(cl)
-    # for i, (x, y) in enumerate(centers):
-    #     ax.annotate(f'{i}', (x, y))
+    bounds = [-12, 12, -8, 12]
+    ax.axis(bounds)
+    ax.annotate('Burial Depth', (bounds[0]+0.1, -burial_depth-0.1), color='red', size=8, va='top')
+    ax.annotate('Seafloor', (bounds[0]+0.1, +0.1), color='blue', size=8, va='bottom')
+    circle_patch_collection = PatchCollection(circles, match_original=True, label='fre')
+    ax.add_collection(circle_patch_collection)
+    ax.axhline(y=0, color='b', linestyle='-')
+    ax.axhline(y=-burial_depth, color='r', linestyle='--')
 
-    ax.axhline(y=0, color='b', linestyle='-', label='Seafloor')
-    ax.axhline(y=-burial_depth, color='r', linestyle='--', label='Burial depth')
-
-    # ax.plot([center_1, (M1 + x_range, -burial_depth)])
     if x_ >= 0:
         x_range = np.sqrt(x_)
         left = (centers[0][0] - x_range, -burial_depth)
@@ -59,18 +47,22 @@ def main():
         ax.add_collection(lc)
         lc = LineCollection([[left, right]], linewidth=3.0,)
         ax.add_collection(lc)
-        ax.annotate(f'Swath: {2 * x_range:.2g} m', (0, -burial_depth+0.5), ha='center')
-    ax.scatter(*np.array(centers).T)
+        swath = 2 * x_range - sensor_x[0] + sensor_x[-1]
+        ax.annotate(f'Swath: {swath :.1f} m (2×{x_range:.1f} + {sensor_x[-1]- sensor_x[0]:.1f})', (0, -burial_depth + 0.5), ha='center')
+    sensor_artist = ax.scatter(*np.array(centers).T, label='Sensors')
 
     ax.set_xlabel("Cross-track [m]")
     ax.set_ylabel("Altitude [m]")
-    # ax.set_title("Detection Range")
     ax.set_aspect('equal')
+
+    import matplotlib.artist as martist
+    circle_proxy = Line2D([0], [0], linestyle='--', alpha=0.7, color='grey', label='Detection range')
+    ax.legend(handles=[circle_proxy, sensor_artist])
     st.pyplot(fig)
 
 
 def get_input():
-    DR = st.slider("Detection Range [m]", 0.0, 20.0, 7.0, step=0.1)
+    DR = st.slider("Detection Range [m] (@ 2 nT)", 0.0, 20.0, 7.0, step=0.1)
     BD = st.slider("Burial Depth [m]", 0.0, 10.0, 3.0, step=0.1)
     ALT = st.slider("Altitude [m]", 0.0, 30.0, 3.0, step=0.1)
     n_sensors = st.sidebar.slider('Number of sensors', 1, 5, 3, step=1)
