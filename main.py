@@ -48,7 +48,9 @@ def main():
         lc = LineCollection([[left, right]], linewidth=3.0,)
         ax.add_collection(lc)
         swath = 2 * x_range - sensor_x[0] + sensor_x[-1]
-        ax.annotate(f'Swath: {swath :.1f} m (2×{x_range:.1f} + {sensor_x[-1]- sensor_x[0]:.1f})', (0, -7), ha='center')
+        # (2×{x_range:.1f} + {sensor_x[-1]- sensor_x[0]:.1f})
+        ax.annotate(f'Swath: {swath :.1f} m \n'
+                    f'DC: {x_range:.1f} m', (0, -7), ha='center')
     sensor_artist = ax.scatter(*np.array(centers).T, label='Sensors')
 
     ax.set_xlabel("Cross-track [m]")
