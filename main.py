@@ -69,7 +69,7 @@ def get_input():
     ALT = st.slider("Altitude [m]", 0.0, 30.0, 3.0, step=0.1)
     n_sensors = st.sidebar.slider('Number of sensors', 1, 5, 3, step=1)
     if n_sensors > 1:
-        spacing = st.sidebar.slider('Sensor spacing', 1.0, 5.0, 2.5, step=0.1)
+        spacing = st.sidebar.slider('Sensor spacing', 1.0, 5.0, 2.5, step=0.01)
     else:
         spacing = 1
     return ALT, BD, DR, n_sensors, spacing
