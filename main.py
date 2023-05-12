@@ -81,8 +81,7 @@ def get_input():
     config = st.sidebar.selectbox('Configurations', CONFIGS.keys(), index=3)
     n_sensors, spacing = CONFIGS[config]
 
-    help = 'If the mag configuration includes sensors above several sensors, ' \
-           'then only the bottom ones are counted here because they are relevant for the coverage. '
+    help = 'For Geowing configurations the MAG coverage is calculated only considering the bottom MAGs'
     n_sensors = st.sidebar.slider('Number of sensors', 1, 5, n_sensors, step=1, help=help)
     if n_sensors > 1:
         spacing = st.sidebar.slider('Sensor spacing', 1.0, 5.0, spacing, step=0.01)
