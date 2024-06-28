@@ -74,7 +74,7 @@ CONFIGS = {
 }
 
 def get_input():
-    DR = st.slider("Detection Range [m] (@ 2 nT)", 0.0, 20.0, 7.0, step=0.1)
+    DR = st.slider("Detection Range [m]", 0.0, 20.0, 7.0, step=0.1)
     BD = st.slider("Burial Depth [m]", 0.0, 10.0, 3.0, step=0.1)
     ALT = st.slider("Altitude [m]", 0.0, 30.0, 3.0, step=0.1)
 
